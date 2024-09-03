@@ -5,6 +5,7 @@ using ArsalanAssesment.Web.Repository.Contracts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -79,9 +80,9 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(x =>
+.AddJwtBearer(options =>
 {
-    x.TokenValidationParameters = new TokenValidationParameters
+    options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateActor = true,
         ValidateIssuer = true,
@@ -92,8 +93,44 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration.GetSection("JWT:Audience").Value,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("JWT:Key").Value!))
     };
+    // Hook into the JWT validation process
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            // Custom logic after the token is successfully validated
+            // You can access the user claims, HttpContext, etc.
+
+            var user = context.Principal; // The validated user
+            var claims = user.Claims; // Access user claims if needed
+
+            // Example: Log the token validation
+            Console.WriteLine($"Token validated for user: {user.Identity.Name}");
+
+
+            CheckUserLoggedInMiddleware.IsLoggedIn = true;
+
+            // Continue with the request
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            // Logic when authentication fails (e.g., token is invalid)
+            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            // Logic when the JWT challenge is issued (e.g., missing or expired token)
+            Console.WriteLine("JWT challenge issued.");
+
+            return Task.CompletedTask;
+        }
+    };
 
 });
+
 //End settings for auth
 
 var app = builder.Build();
@@ -115,6 +152,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Register the custom middleware before authentication
+app.UseMiddleware<CheckUserLoggedInMiddleware>();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
@@ -168,3 +211,43 @@ async Task SeedAdminUserAsync(UserManager<IdentityUser> userManager, RoleManager
         }
     }
 }
+
+
+public class CheckUserLoggedInMiddleware
+{
+    private readonly RequestDelegate _next;
+    public static bool IsLoggedIn = false;
+
+    public CheckUserLoggedInMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // List of paths that can be accessed without authentication
+        var bypassPaths = new[] { "/api/users/login", "/api/users/register", "/swagger" };
+
+        // Check if the current path is in the bypass list
+        if (bypassPaths.Any(path => context.Request.Path.StartsWithSegments(path, StringComparison.OrdinalIgnoreCase)))
+        {
+            // Bypass the authentication check for these paths
+            await _next(context);
+            return;
+        }
+
+        // Check if the user is authenticated for all other paths
+        if (!IsLoggedIn)
+        {
+            // Return 401 Unauthorized if the user is not authenticated
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsync("User is not logged in.");
+            return;
+        }
+
+        // Proceed to the next middleware if the user is authenticated
+        await _next(context);
+    }
+}
+
+

@@ -59,6 +59,7 @@ namespace ArsalanAssesment.Web.Repository
 
                 string token = GenerateTokenString(loginUserDTO.Email, rolesList);
 
+
                 return ResponseHelper.CreateResponse(true, false, ResponseMessages.UserLoggedIn, token);
             }
             catch (Exception ex)
@@ -180,7 +181,7 @@ namespace ArsalanAssesment.Web.Repository
                     }
 
                     /*  If the role is not already assigned to the user, add it
-                        If the role is already assigned, do nothing */
+                        If the role is already assigned, do nothing  */
 
                     if (!currentRoles.Contains(role))
                     {
@@ -347,7 +348,7 @@ namespace ArsalanAssesment.Web.Repository
                 signingCredentials: signingcreds
             );
 
-            string tokenString = new JwtSecurityTokenHandler().WriteToken(securityToken);
+            string tokenString = $"Bearer {new JwtSecurityTokenHandler().WriteToken(securityToken)}";
 
             return tokenString;
         }

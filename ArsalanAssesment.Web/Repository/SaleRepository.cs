@@ -175,43 +175,32 @@ namespace ArsalanAssesment.Web.Repository
             {
                 // Find All Sales from DB, no tracking for optimizations
                 var query = _dbContext.Sales.AsNoTracking().AsQueryable();
+                                
+                List<Sale> filteredSales = new List<Sale>();
 
-                // Check if both dates are provided and validate the date range
-                if (startDate.HasValue && endDate.HasValue && representativeId > 0)                 
+                if(startDate.HasValue && endDate.HasValue)
                 {
-                    if (endDate.Value <= startDate.Value)
-                    {
-                        // If Ending date is less than or equal to Starting Date
-                        return ResponseHelper.CreateResponse(true, false, ResponseMessages.InvalidDates);
-                    }
-
-                    // Apply date range filter if both dates are valid
-                    query = query.Where(sale => sale.SaleDate >= startDate.Value
-                                                 && sale.SaleDate <= endDate.Value);
+                    filteredSales = (representativeId <= 0) ?
+                     await query.Where(x => x.SaleDate >= startDate && x.SaleDate <= endDate).ToListAsync() :
+                     await query.Where(x => (x.SaleDate >= startDate && x.SaleDate <= endDate) && (x.RepresentativeID == representativeId)).ToListAsync();
                 }
-                else if ((!startDate.HasValue || !endDate.HasValue) && representativeId > 0)
+                else if(representativeId > 0) 
                 {
-                    // if Date range is not entered by User but Representative Id is provided
-                    query = query.Where(sale => sale.RepresentativeID == representativeId);
+                    filteredSales = await query.Where(s => s.RepresentativeID == representativeId).ToListAsync();
                 }
                 else
                 {
-                    // If user has neither entered dates or correct dates and Representative Id
                     return ResponseHelper.CreateResponse(true, false, ResponseMessages.InvalidData);
                 }
 
-
-                // Execute the query and retrieve the filtered results
-                var sales = await query.ToListAsync();
-
-                if (sales.Count <= 0)
+                if (filteredSales.Count <= 0)
                 {
                     // If no sales are found, return a not found response
                     return ResponseHelper.CreateResponse(true, false, ResponseMessages.NotFound);
                 }
 
                 // Map the sales list to a list of GetSaleDTO and return it in the response
-                var salesDTOs = _mapper.Map<List<GetSaleDTO>>(sales);
+                var salesDTOs = _mapper.Map<List<GetSaleDTO>>(filteredSales);
 
                 // Create response for success and return it
                 return ResponseHelper.CreateResponse(true, false, ResponseMessages.Successful, salesDTOs);
@@ -225,8 +214,5 @@ namespace ArsalanAssesment.Web.Repository
                 return ResponseHelper.CreateResponse(false, true, ResponseMessages.ExceptionMessage);
             }
         }
-
-
-
     }
 }

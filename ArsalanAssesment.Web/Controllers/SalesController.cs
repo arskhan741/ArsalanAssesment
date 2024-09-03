@@ -28,7 +28,7 @@ namespace ArsalanAssesment.Web.Controllers
         }
 
         [HttpGet]
-        [Route("GetAllSales")]
+        [Route("get-all-sales")]
         public async Task<IActionResult> GetAll()
         {
             var response = await _saleRepository.GetAllAsync();
