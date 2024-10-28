@@ -1,0 +1,49 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FE Prac1 Dapper</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="header"></div>
+    <script>
+      fetch("header.html")
+        .then((response) => response.text())
+        .then((data) => (document.getElementById("header").innerHTML = data));
+    </script>
+
+    <section class="home">
+      <div class="home-content">
+        <h1>Our Employees.</h1>
+        <h3>Best results!</h3>
+        <p>
+          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Et eum nobis
+          saepe sequi vero corporis reprehenderit similique, placeat, ullam
+          excepturi sunt alias velit at recusandae? Amet voluptatem esse
+          architecto obcaecati?
+        </p>
+        <a href="" class="btn">Explore Employee</a>
+      </div>
+
+      <div class="home-img">
+        <div class="rhombus">
+          <img
+            src="images/talent-acquisition-hr-manager-onboarding-new-employees_1036975-209046.png"
+            alt="employee image"
+          />
+        </div>
+      </div>
+    </section>
+
+    <div class="container hidden">
+      <div class="box" id="b1">1</div>
+      <div class="box" id="b2">2</div>
+      <div class="box" id="b3">3</div>
+    </div>
+  </body>
+</html>
