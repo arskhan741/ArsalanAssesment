@@ -14,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add SQL Connection
 builder.Services.AddDbContext<ApplicationDBContext>(option =>
 {
-    option.UseSqlServer(builder.Configuration.GetConnectionString("SQLConnection"));
+    option.UseSqlServer(builder.Configuration.GetConnectionString("SQLConnectionOfc"));
 });
 
 //Register for swagger Controller
@@ -96,6 +96,18 @@ builder.Services.AddAuthentication(options =>
 });
 //End settings for auth
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        policy =>
+        {
+            policy.WithOrigins("http://127.0.0.1:5500") // Add your front-end URL here
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 
 // Seed the admin user and role
@@ -116,6 +128,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowLocalhost");
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
@@ -131,7 +145,7 @@ app.Run();
 async Task SeedAdminUserAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
 {
     const string adminEmail = "admin@domain.com";
-    const string adminUsername = "admin";
+    const string adminUsername = "HeadAdmin";
     const string adminPassword = "Nesl@admin123";
     const string adminRole = "admin";
 

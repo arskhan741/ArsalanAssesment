@@ -11,6 +11,6 @@ namespace ArsalanAssesment.Web.Repository.Contracts
         Task<ResponseDTO> UpdateUser(Guid id, UpdateUserDTO updateUserDTO);
         Task<ResponseDTO> GetAllUser();
         Task<ResponseDTO> DeleteUser(Guid id);
-        String GenerateTokenString(string userEmail, List<string> roles);
+        String GenerateTokenString(string userEmail, Guid userGuid, List<string> roles);
     }
 }

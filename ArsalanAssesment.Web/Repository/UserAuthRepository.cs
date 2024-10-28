@@ -54,10 +54,13 @@ namespace ArsalanAssesment.Web.Repository
                     return ResponseHelper.CreateResponse(true, false, ResponseMessages.InvalidLoginDetails);
                 }
 
+                // Get User Guid
+                Guid userId = Guid.Parse(enteredUser.Id);
+
                 // Fetch the roles for the user
                 List<string> rolesList = (await _userManager.GetRolesAsync(enteredUser)).ToList();
 
-                string token = GenerateTokenString(loginUserDTO.Email, rolesList);
+                string token = GenerateTokenString(loginUserDTO.Email, userId, rolesList);
 
                 return ResponseHelper.CreateResponse(true, false, ResponseMessages.UserLoggedIn, token);
             }
@@ -321,12 +324,13 @@ namespace ArsalanAssesment.Web.Repository
         /// <param name="userEmail"> The email of logged in user</param>
         /// <param name="roles"> The roles of logged in user</param>
         /// <returns></returns>
-        public string GenerateTokenString(string userEmail, List<string> roles)
+        public string GenerateTokenString(string userEmail, Guid userGuid, List<string> roles)
         {
             // Create claims for the user's email and roles
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Email, userEmail)
+                new Claim(ClaimTypes.Email, userEmail),
+                new Claim("UserGuid", userGuid.ToString()) // Adding the GUID as a custom claim
             };
 
             // Add a separate claim for each role
@@ -352,6 +356,6 @@ namespace ArsalanAssesment.Web.Repository
             return tokenString;
         }
 
-            
+
     }
 }

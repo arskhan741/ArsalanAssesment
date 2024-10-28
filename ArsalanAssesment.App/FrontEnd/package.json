@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "jsonwebtoken": "^9.0.2",
+    "util": "^0.12.5"
+  },
+  "devDependencies": {
+    "crypto-browserify": "^3.12.1",
+    "stream-browserify": "^3.0.0",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
